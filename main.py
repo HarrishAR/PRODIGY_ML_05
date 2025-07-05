@@ -32,7 +32,7 @@ def load_model_and_data():
     with open("food_model.pkl", "rb") as f:
         model = pickle.load(f)
     nutrition_df = pd.read_csv("harrish-nutrition.csv")
-    print("✅ Model and nutrition data loaded.")
+    print(" Model and nutrition data loaded.")
 
 load_model_and_data()
 
@@ -40,7 +40,7 @@ def extract_features(image_path):
     img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
     
     if img is None:
-        raise ValueError(f"❌ Unable to read image at path: {image_path}")
+        raise ValueError(f" Unable to read image at path: {image_path}")
 
     img = cv2.resize(img, IMG_SIZE)
     features, _ = hog(img, pixels_per_cell=(8, 8),
@@ -59,26 +59,21 @@ async def predict(request: Request, image: UploadFile = File(None), dish_name: s
     try:
         prediction = None
 
-        # ✅ IMAGE INPUT
         if image and image.filename:
             file_ext = os.path.splitext(image.filename)[1]
             file_path = os.path.join(UPLOAD_FOLDER, f"{uuid4().hex}{file_ext}")
             with open(file_path, "wb") as f:
                 f.write(await image.read())
 
-            # Check if image is valid
             features = extract_features(file_path)
             prediction = model.predict([features])[0]
 
-        # ✅ TEXT INPUT
         elif dish_name and dish_name.strip() != "":
             prediction = dish_name.strip()
 
-        # ❌ No input at all
         else:
             raise ValueError("Please upload an image or enter a dish name.")
 
-        # ✅ Get nutrition info
         nutrition = nutrition_df[nutrition_df['Dish Name'].str.strip().str.lower().str.contains(prediction.lower())]
         nutrition_data = nutrition.to_dict(orient="records") if not nutrition.empty else []
         return templates.TemplateResponse("index.html", {
@@ -90,7 +85,7 @@ async def predict(request: Request, image: UploadFile = File(None), dish_name: s
         })
 
     except Exception as e:
-        print("❌ Error during prediction:", e)
+        print("Error during prediction:", e)
         return templates.TemplateResponse("index.html", {
             "request": request,
             "result": {"prediction": "Error", "nutrition": {"Error": str(e)}}
