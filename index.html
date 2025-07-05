@@ -1,120 +1,165 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Food Prediction</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Nutrition Predictor</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Segoe UI', sans-serif;
-            background-color: #f5f6fa;
-            padding: 40px;
-            margin: 0;
-        }
-        .container {
-            max-width: 600px;
-            margin: auto;
-            background: #ffffff;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.1);
-        }
-        h1 {
-            text-align: center;
-            color: #2c3e50;
-        }
-        label {
-            font-weight: 600;
-            display: block;
-            margin-top: 20px;
-            color: #34495e;
-        }
-        input[type="file"],
-        input[type="text"],
-        button {
-            width: 100%;
-            padding: 12px;
-            margin-top: 10px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            font-size: 16px;
-        }
-        button {
-            background-color: #3498db;
-            color: white;
-            font-weight: bold;
-            border: none;
-            cursor: pointer;
-            margin-top: 25px;
-        }
-        button:hover {
-            background-color: #2980b9;
-        }
-        .result {
-            margin-top: 30px;
+            font-family: 'Inter', sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             padding: 20px;
-            background-color: #ecf9ff;
-            border-left: 6px solid #3498db;
-            border-radius: 8px;
         }
-        .result ul {
-            list-style: none;
-            padding: 0;
+        .container-card {
+            background-color: #ffffff;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            padding: 2.5rem; /* 40px */
+            width: 100%;
+            max-width: 800px; /* Increased max-width for better table display */
         }
-        .result li {
-            margin: 8px 0;
+        .btn-primary {
+            background-image: linear-gradient(to right, #6a11cb 0%, #2575fc 100%);
+            border: none;
+            color: white;
+            transition: all 0.3s ease;
         }
-        .error {
-            color: red;
-            margin-top: 10px;
+        .btn-primary:hover {
+            box-shadow: 0 4px 20px rgba(106, 17, 203, 0.4);
+            transform: translateY(-2px);
         }
-        .footer {
-            text-align: center;
-            margin-top: 50px;
-            color: #aaa;
-            font-size: 12px;
+        .btn-secondary {
+            background-color: #6b7280;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .btn-secondary:hover {
+            background-color: #4b5563;
+            transform: translateY(-1px);
+        }
+        .input-field {
+            border-radius: 0.5rem;
+            border: 1px solid #d1d5db;
+            padding: 0.75rem 1rem;
+            width: 100%;
+        }
+        .error-message {
+            background-color: #fee2e2;
+            color: #ef4444;
+            border: 1px solid #ef4444;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem; /* 24px */
+        }
+        .nutrition-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1.5rem; /* 24px */
+        }
+        .nutrition-table th, .nutrition-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .nutrition-table th {
+            background-color: #f9fafb;
+            font-weight: 600;
+            color: #374151;
+        }
+        .nutrition-table tr:last-child td {
+            border-bottom: none;
+        }
+        .image-preview {
+            max-width: 100%;
+            height: auto;
+            max-height: 250px; /* Limit image height */
+            object-fit: contain; /* Ensure entire image is visible */
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            margin-top: 1rem; /* 16px */
         }
     </style>
 </head>
 <body>
+    <div class="container-card">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-8">Food Nutrition Predictor</h1>
 
-<div class="container">
-    <h1>🍛 Food Nutrition Finder</h1>
+        {# Display Error Messages #}
+        {% if error %}
+            <div class="error-message" role="alert">
+                <p class="font-medium">{{ error }}</p>
+            </div>
+        {% endif %}
 
-    <form method="post" enctype="multipart/form-data">
-        <label>Upload Food Image</label>
-        <input type="file" name="image" accept="image/*">
+        {# Conditional rendering: Show results if label or nutrition_list exists, otherwise show form #}
+        {% if label or nutrition_list %}
+            {# Display Prediction Results #}
+            <div class="mb-8 text-center">
+                {% if label %}
+                    <h2 class="text-2xl font-semibold text-blue-700 mb-4">Predicted Food: <span class="text-green-600">{{ label }}</span></h2>
+                {% endif %}
 
-        <label>Or Enter Dish Name</label>
-        <input type="text" name="dish_name" placeholder="e.g. dosa, idli, biryani">
+                {% if uploaded_image_path %}
+                    <img src="{{ uploaded_image_path }}" alt="Uploaded Food" class="mx-auto image-preview">
+                {% endif %}
+            </div>
 
-        <button type="submit">Get Nutrition Info</button>
-    </form>
-
-    {% if result %}
-    <div class="result">
-        {% if result.prediction != 'Error' %}
-            <h3>Nutrition Info</h3>
-            {% if result.nutrition %}
-                <ul>
-                    {% for dish in result.nutrition %}
-                        <ul style="margin-bottom: 20px; padding-left: 0;">
-                            {% for key, value in dish.items() %}
-                                <li><strong>{{ key }}:</strong> {{ value }}</li>
+            {% if nutrition_list %}
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 nutrition-table">
+                        <thead>
+                            <tr>
+                                <th>Dish Name</th>
+                                <th>Calories (kcal)</th>
+                                <th>Protein (g)</th>
+                                <th>Fats (g)</th>
+                                <th>Carbohydrates (g)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for item in nutrition_list %}
+                                <tr>
+                                    <td>{{ item.name }}</td>
+                                    <td>{{ item.calories }}</td>
+                                    <td>{{ item.protein }}</td>
+                                    <td>{{ item.fat }}</td>
+                                    <td>{{ item.carbs }}</td>
+                                </tr>
                             {% endfor %}
-                        </ul>
-                        <hr>
-                    {% endfor %}
-
-                </ul>
-            {% else %}
-                <p>No nutrition info found for this dish.</p>
+                        </tbody>
+                    </table>
+                </div>
+            {% elif label %} {# Only show this if a label was predicted but no nutrition was found #}
+                <p class="text-center text-gray-600 mt-4">No detailed nutrition information found for "{{ label }}".</p>
             {% endif %}
+
+            <div class="text-center mt-8">
+                <a href="/" class="inline-block py-2.5 px-6 rounded-lg text-lg font-semibold btn-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                    Go Back / Try Another
+                </a>
+            </div>
+
         {% else %}
-            <p class="error"><strong>Error:</strong> {{ result.nutrition.Error }}</p>
+            {# Display Input Form #}
+            <form action="/" method="post" enctype="multipart/form-data" class="space-y-6">
+                <div>
+                    <label for="image" class="block text-sm font-medium text-gray-700 mb-2">Upload Food Image:</label>
+                    <input type="file" name="image" id="image" accept="image/jpeg, image/png" class="input-field file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                </div>
+
+                {# Removed the "OR" separator and the "Enter Food Name" input field #}
+                
+                <button type="submit" class="w-full py-2.5 px-4 rounded-lg text-lg font-semibold btn-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Get Nutrition Info
+                </button>
+            </form>
         {% endif %}
     </div>
-    {% endif %}
-</div>
-
-
 </body>
 </html>
